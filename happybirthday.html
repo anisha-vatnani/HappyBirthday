@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>✨Happy Birthday✨</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #24252c, #050509 60%);
+      color: #f5f5f5;
+    }
+
+    .wrapper {
+      text-align: center;
+      padding: 8px;
+      width: 100%;
+      max-width: 1280px;
+      box-sizing: border-box;
+    }
+
+h1,
+.subtitle,
+.mini {
+  display: none !important;
+}
+
+/* Center score nicely */
+.score {
+  font-size: 1.1rem;
+  margin-top: 10px;
+}
+
+    .subtitle {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      margin-bottom: 8px;
+    }
+
+    .top-bar {
+      max-width: 1200px;
+      margin: 0 auto 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+
+    .top-left {
+      text-align: left;
+    }
+
+    .top-right {
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .switch-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      background: #ffcc4d;
+      color: #222;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    canvas {
+      background: #111;
+      border-radius: 12px;
+      border: 1px solid #444;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      max-width: 100%;
+      touch-action: manipulation;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .score {
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+
+    .mini {
+      font-size: 0.76rem;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+
+    .highlight {
+      color: #ffcc4d;
+      font-weight: 600;
+    }
+
+    /* Login overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(20, 20, 35, 0.96), rgba(5, 5, 10, 0.98));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .overlay-card {
+      background: rgba(10, 10, 20, 0.95);
+      border-radius: 16px;
+      padding: 18px 20px;
+      width: 90%;
+      max-width: 360px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+
+    .overlay-card h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+    }
+
+    .overlay-card p {
+      margin: 0 0 14px;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    .player-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .player-btn {
+      flex: 1;
+      border-radius: 999px;
+      border: none;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, background 0.15s;
+    }
+
+    .player-btn.you {
+      background: #ff9ff3;
+      color: #241226;
+    }
+
+    .player-btn.him {
+      background: #74b9ff;
+      color: #041320;
+    }
+
+    .player-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+    }
+
+    .player-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+    }
+
+    .overlay-note {
+      font-size: 0.75rem;
+      opacity: 0.75;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login overlay -->
+  <div class="overlay" id="loginOverlay">
+    <div class="overlay-card">
+      <h2>Who’s playing? 🎮</h2>
+      <p>Select the player so we can track your high scores separately.</p>
+      <div class="player-buttons">
+        <button class="player-btn you" data-player="you">You</button>
+        <button class="player-btn him" data-player="him">Him</button>
+      </div>
+      <div class="overlay-note">
+        You can switch players later with the “Switch” button.
+      </div>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <h1>Power-Up Runner ✨</h1>
+    <div class="subtitle">
+      Tap / click or press <strong>Space</strong> / <strong>↑</strong> to jump.<br>
+      Double-tap before landing for a flappy-style double jump.
+    </div>
+
+    <div class="top-bar">
+      <div class="top-left">
+        <span id="currentPlayerLabel">Playing as: —</span>
+        <button class="switch-btn" id="switchPlayerBtn">Switch</button>
+        <button class="switch-btn" id="muteBtn">🔊</button>
+      </div>
+      <div class="top-right" id="highScoresLabel">
+        You: 0 | Him: 0
+      </div>
+    </div>
+
+    <canvas id="game" width="1280" height="720"></canvas>
+
+    <div class="score">
+      Power-ups this run: <span id="scoreValue" class="highlight">0</span>
+    </div>
+    <div class="mini" id="statusText">
+      Choose a player to start.
+    </div>
+    <div class="mini">
+      Art files needed in this folder: <code>background.png</code>,
+      <code>character.png</code>, <code>cactus1.png</code>, <code>cactus2.png</code>,
+      <code>cactus3.png</code>, <code>orb1.png</code>, <code>orb2.png</code>, <code>orb3.png</code> 🎨
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // ASSET FILENAMES
+    // =========================
+    const ASSETS = {
+      background: "background.png",
+      character: "character.png",
+      cactusFiles: ["cactus1.png", "cactus2.png", "cactus3.png"],
+      orbFiles: ["orb1.png", "orb2.png", "orb3.png"]
+    };
+
+    const jumpSound = new Audio("jump.mp3");
+jumpSound.volume = 0.6;
+
+const pickupSound = new Audio("pickup.mp3");
+pickupSound.volume = 0.6;
+
+// Helper: lets the same sound play repeatedly without "cutting out"
+function playSound(sound) {
+  if (isMuted) return;
+
+  try {
+    sound.currentTime = 0;
+    sound.play();
+  } catch (e) {
+    // ignore autoplay restrictions
+  }
+}
+
+
+const muteBtn = document.getElementById("muteBtn");
+const MUTE_KEY = "power_runner_muted";
+
+// load saved mute preference
+let isMuted = localStorage.getItem(MUTE_KEY) === "true";
+
+// update button icon
+function updateMuteUI() {
+  muteBtn.textContent = isMuted ? "🔇" : "🔊";
+}
+
+updateMuteUI();
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const scoreEl = document.getElementById("scoreValue");
+    const statusEl = document.getElementById("statusText");
+    const currentPlayerLabel = document.getElementById("currentPlayerLabel");
+    const highScoresLabel = document.getElementById("highScoresLabel");
+    const loginOverlay = document.getElementById("loginOverlay");
+    const switchPlayerBtn = document.getElementById("switchPlayerBtn");
+    
+
+    const BEST_KEY = "power_runner_best_scores_v2";
+
+    // --- Player / scores state ---
+    let currentPlayer = null; // "you" or "him"
+    let bestScores = { you: 0, him: 0 };
+
+    (function loadBestScores() {
+      const saved = localStorage.getItem(BEST_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          bestScores = { you: parsed.you || 0, him: parsed.him || 0 };
+        } catch (e) {
+          console.error("Failed to parse best scores", e);
+        }
+      }
+      updateHighScoreUI();
+    })();
+
+    function saveBestScores() {
+      localStorage.setItem(BEST_KEY, JSON.stringify(bestScores));
+      updateHighScoreUI();
+    }
+
+    function updateHighScoreUI() {
+      highScoresLabel.textContent = `You: ${bestScores.you} | Him: ${bestScores.him}`;
+    }
+
+    function setCurrentPlayer(playerKey) {
+      currentPlayer = playerKey; // "you" or "him"
+      const label = playerKey === "you" ? "You" : "Him";
+      currentPlayerLabel.textContent = `Playing as: ${label}`;
+      statusEl.textContent = "Press jump to start.";
+    }
+
+    // --- Login overlay buttons ---
+    loginOverlay.addEventListener("click", (e) => {
+      const btn = e.target.closest(".player-btn");
+      if (!btn) return;
+      const playerKey = btn.dataset.player;
+      setCurrentPlayer(playerKey);
+      loginOverlay.style.display = "none";
+    });
+
+    switchPlayerBtn.addEventListener("click", () => {
+      loginOverlay.style.display = "flex";
+      statusEl.textContent = "Choose a player to start.";
+    });
+
+    muteBtn.addEventListener("click", () => {
+  isMuted = !isMuted;
+  localStorage.setItem(MUTE_KEY, isMuted);
+  updateMuteUI();
+});
+
+    // --- Load images ---
+    const bgImg = new Image();
+    bgImg.src = ASSETS.background;
+    let bgLoaded = false;
+    bgImg.onload = () => { bgLoaded = true; };
+
+    const characterImg = new Image();
+    characterImg.src = ASSETS.character;
+    let characterLoaded = false;
+    characterImg.onload = () => { characterLoaded = true; };
+
+    const cactusImgs = [];
+    let cactusLoadedCount = 0;
+    ASSETS.cactusFiles.forEach((file, index) => {
+      const img = new Image();
+      img.src = file;
+      img.onload = () => { cactusLoadedCount++; };
+      cactusImgs[index] = img;
+    });
+
+    const orbImgs = [];
+    let orbLoadedCount = 0;
+    ASSETS.orbFiles.forEach((file, index) => {
+      const img = new Image();
+      img.src = file;
+      img.onload = () => { orbLoadedCount++; };
+      orbImgs[index] = img;
+    });
+
+    function allCactusLoaded() {
+      return cactusLoadedCount === ASSETS.cactusFiles.length;
+    }
+
+    function allOrbsLoaded() {
+      return orbLoadedCount === ASSETS.orbFiles.length;
+    }
+
+    // --- Game constants ---
+    const groundY = 575; // near bottom of 450px canvas
+
+    const player = {
+      x: 140,
+      y: 0,           // will be set in resetGame
+      w: 220,         // on-screen size of your character art
+      h: 220,
+      vy: 0,
+      gravity: 1.05,  // mild gravity
+      jumpStrength: -27,
+      isOnGround: true,
+      jumpCount: 0,   // how many jumps used since leaving ground
+      maxJumps: 3     // flappy-style double jump
+    };
+
+    let obstacles = [];
+    let pickups = [];
+    let gameSpeed = 4;         // slow start
+    let frame = 0;
+    let spawnObstacleTimer = 0;
+    let spawnPickupTimer = 0;
+    let obstacleInterval = 220;
+    let pickupInterval = 70;
+    const OBSTACLE_START_DELAY_FRAMES = 240; // about 4 seconds at 60fps
+
+
+    let score = 0;
+    let gameOver = false;
+    let started = false;
+
+    function resetGame() {
+      obstacles = [];
+      pickups = [];
+      gameSpeed = 4;
+      frame = 0;
+      spawnObstacleTimer = 0;
+      obstacleInterval = 220
+      spawnPickupTimer = 25;
+      score = 0;
+      gameOver = false;
+      started = false;
+
+      player.y = groundY - player.h;
+      player.vy = 0;
+      player.isOnGround = true;
+      player.jumpCount = 0;
+
+      scoreEl.textContent = score;
+
+      if (!currentPlayer) {
+        statusEl.textContent = "Choose a player to start.";
+      } else {
+        statusEl.textContent = "Press jump to start.";
+      }
+    }
+
+    function spawnObstacle() {
+      // Obstacles fairly big but not walls
+      const width = 65;
+      const height = 55 
+
+      const variantIndex = Math.floor(Math.random() * ASSETS.cactusFiles.length);
+
+      obstacles.push({
+        x: canvas.width + 20,
+        y: groundY - height,
+        w: width,
+        h: height,
+        variant: variantIndex
+      });
+    }
+
+    function spawnPickup() {
+      // Orbs clearly above obstacles
+      const size = 80; // visible but not huge
+      const minY = 120;   // high sky band
+      const maxY = 300;
+      const y = minY + Math.random() * (maxY - minY);
+
+      const variantIndex = Math.floor(Math.random() * ASSETS.orbFiles.length);
+
+      pickups.push({
+        x: canvas.width + 20,
+        y,
+        r: size / 2,
+        variant: variantIndex
+      });
+    }
+
+    function updatePlayer() {
+      player.vy += player.gravity;
+      player.y += player.vy;
+
+      if (player.y + player.h >= groundY) {
+        player.y = groundY - player.h;
+        player.vy = 0;
+        player.isOnGround = true;
+        player.jumpCount = 0; // landed → get jumps back
+      }
+    }
+
+    function updateObstacles() {
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        obstacles[i].x -= gameSpeed;
+        if (obstacles[i].x + obstacles[i].w < 0) {
+          obstacles.splice(i, 1);
+        }
+      }
+    }
+
+    function updatePickups() {
+      for (let i = pickups.length - 1; i >= 0; i--) {
+        pickups[i].x -= gameSpeed * 0.9;
+        if (pickups[i].x + pickups[i].r < 0) {
+          pickups.splice(i, 1);
+        }
+      }
+    }
+
+    function rectRectOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    function playerHitsObstacle() {
+      for (const o of obstacles) {
+        if (rectRectOverlap(player.x, player.y, player.w, player.h, o.x, o.y, o.w, o.h)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function playerCollectsPickups() {
+      for (let i = pickups.length - 1; i >= 0; i--) {
+        const p = pickups[i];
+        const px = p.x - p.r;
+        const py = p.y - p.r;
+        const pw = p.r * 2;
+        const ph = p.r * 2;
+
+        if (rectRectOverlap(player.x, player.y, player.w, player.h, px, py, pw, ph)) {
+          pickups.splice(i, 1);
+          score++;
+          playSound(pickupSound);
+          if (currentPlayer === "him" && score === 24) {
+  alert("👀 You hit 24… interesting choice. ⭐");
+}
+
+          scoreEl.textContent = score;
+
+          if (currentPlayer) {
+            if (currentPlayer === "you" && score > bestScores.you) {
+              bestScores.you = score;
+              saveBestScores();
+            } else if (currentPlayer === "him" && score > bestScores.him) {
+              bestScores.him = score;
+              saveBestScores();
+            }
+          }
+        }
+      }
+    }
+
+    function drawBackground() {
+      if (bgLoaded) {
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = "#111";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function drawGround() {
+      ctx.strokeStyle = "rgba(255,255,255,0)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY + 0.5);
+      ctx.lineTo(canvas.width, groundY + 0.5);
+      ctx.stroke();
+    }
+
+    function drawPlayer() {
+      if (characterLoaded) {
+        ctx.drawImage(characterImg, player.x, player.y, player.w, player.h);
+      } else {
+        ctx.fillStyle = "#4ecdc4";
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+        ctx.fillStyle = "#111";
+        ctx.fillRect(player.x + player.w * 0.6, player.y + player.h * 0.25, 6, 6);
+      }
+    }
+
+    function drawObstacles() {
+      for (const o of obstacles) {
+        if (allCactusLoaded()) {
+          const img = cactusImgs[o.variant] || cactusImgs[0];
+          ctx.drawImage(img, o.x, o.y, o.w, o.h);
+        } else {
+          ctx.fillStyle = "#e63946";
+          ctx.fillRect(o.x, o.y, o.w, o.h);
+        }
+      }
+    }
+
+    function drawPickups() {
+      for (const p of pickups) {
+        const size = p.r * 2;
+
+        if (allOrbsLoaded()) {
+          const img = orbImgs[p.variant] || orbImgs[0];
+          ctx.drawImage(img, p.x - p.r, p.y - p.r, size, size);
+        } else {
+          const gradient = ctx.createRadialGradient(
+            p.x, p.y, 1,
+            p.x, p.y, p.r
+          );
+          gradient.addColorStop(0, "#fff7b0");
+          gradient.addColorStop(0.4, "#ffe066");
+          gradient.addColorStop(1, "rgba(255, 224, 102, 0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function showGameOverOverlay() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#f1f1f1";
+      ctx.textAlign = "center";
+      ctx.font = "18px system-ui";
+      ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 6);
+      ctx.font = "13px system-ui";
+      ctx.fillText("Press R or tap to restart", canvas.width / 2, canvas.height / 2 + 14);
+
+      if (currentPlayer === "you") {
+        statusEl.textContent = "You wiped out. Tragic gamer arc 💀";
+      } else if (currentPlayer === "him") {
+        statusEl.textContent = "He wiped out. Skill issue tbh 💀";
+      } else {
+        statusEl.textContent = "Someone wiped out.";
+      }
+    }
+
+    function loop() {
+      requestAnimationFrame(loop);
+
+      drawBackground();
+      drawGround();
+
+      if (!started) {
+        drawObstacles();
+        drawPickups();
+        drawPlayer();
+        return;
+      }
+
+      if (!gameOver) {
+        frame++;
+
+        updatePlayer();
+
+        spawnObstacleTimer++;
+        spawnPickupTimer++;
+
+       // Only start spawning obstacles after a delay
+if (frame > OBSTACLE_START_DELAY_FRAMES && spawnObstacleTimer >= obstacleInterval) {
+  spawnObstacle();
+  spawnObstacleTimer = 0;
+
+  // Slowly make them a bit closer together, but not too much
+  if (obstacleInterval > 160) {       // don't go below 160 frames (~2.7s)
+    obstacleInterval -= 0.2;          // very gentle ramp
+  }
+}
+
+        if (spawnPickupTimer >= pickupInterval) {
+          spawnPickup();
+          spawnPickupTimer = 0;
+        }
+
+        updateObstacles();
+        updatePickups();
+
+        if (playerHitsObstacle()) {
+          gameOver = true;
+        } else {
+          playerCollectsPickups();
+
+          // gentle speed ramp
+          if (frame % 360 === 0 && gameSpeed < 9) {
+            gameSpeed += 0.25;
+          }
+        }
+      }
+
+      drawObstacles();
+      drawPickups();
+      drawPlayer();
+
+      if (gameOver) {
+        showGameOverOverlay();
+      }
+    }
+
+    function jump() {
+      if (!currentPlayer) {
+        loginOverlay.style.display = "flex";
+        return;
+      }
+
+      if (!started) {
+        started = true;
+        statusEl.textContent = "Grab as many power-ups as you can ✨";
+      }
+
+      if (gameOver) return;
+
+      // Flappy-style double jump: max 2 boosts per airtime
+     if (player.jumpCount < player.maxJumps) {
+
+  // 🔊 Only play on the FIRST jump of this airtime
+  if (player.jumpCount === 0) {
+    playSound(jumpSound);
+  }
+
+  player.vy = player.jumpStrength;
+  player.isOnGround = false;
+  player.jumpCount += 1;
+}
+    }
+
+    function restart() {
+      resetGame();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        e.preventDefault();
+        jump();
+      }
+      if (e.code === "KeyR") {
+        restart();
+      }
+    });
+
+    canvas.addEventListener("mousedown", () => {
+      if (gameOver) {
+        restart();
+      } else {
+        jump();
+      }
+    });
+
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      if (gameOver) {
+        restart();
+      } else {
+        jump();
+      }
+    }, { passive: false });
+
+    resetGame();
+    loop();
+  </script>
+</body>
+</html>
