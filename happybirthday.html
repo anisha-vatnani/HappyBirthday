@@ -182,6 +182,14 @@ h1,
       opacity: 0.75;
       margin-top: 6px;
     }
+    .easter-egg-image {
+  max-width: min(900px, 90vw);
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 0;       /* no rounded card look */
+  box-shadow: none;       /* no floating panel shadow */
+  pointer-events: none;  /* clicking anywhere closes overlay */
+}
   </style>
 </head>
 <body>
@@ -199,6 +207,13 @@ h1,
       </div>
     </div>
   </div>
+  <div class="overlay" id="easterEggOverlay" style="display:none;">
+  <img
+    src="easter-24.png"
+    alt=""
+    class="easter-egg-image"
+  />
+</div>
 
   <div class="wrapper">
     <h1>Power-Up Runner ✨</h1>
@@ -285,6 +300,9 @@ updateMuteUI();
     const highScoresLabel = document.getElementById("highScoresLabel");
     const loginOverlay = document.getElementById("loginOverlay");
     const switchPlayerBtn = document.getElementById("switchPlayerBtn");
+    const easterEggOverlay = document.getElementById("easterEggOverlay");
+let easterShownThisRun = false;
+
     
 
     const BEST_KEY = "power_runner_best_scores_v2";
@@ -340,7 +358,11 @@ updateMuteUI();
   isMuted = !isMuted;
   localStorage.setItem(MUTE_KEY, isMuted);
   updateMuteUI();
+})
+easterEggOverlay.addEventListener("click", () => {
+  easterEggOverlay.style.display = "none";
 });
+;
 
     // --- Load images ---
     const bgImg = new Image();
@@ -421,6 +443,8 @@ updateMuteUI();
       score = 0;
       gameOver = false;
       started = false;
+      easterShownThisRun = false;
+
 
       player.y = groundY - player.h;
       player.vy = 0;
@@ -524,9 +548,7 @@ updateMuteUI();
           pickups.splice(i, 1);
           score++;
           playSound(pickupSound);
-          if (currentPlayer === "him" && score === 24) {
-  alert("👀 You hit 24… interesting choice. ⭐");
-}
+          
 
           scoreEl.textContent = score;
 
@@ -686,6 +708,14 @@ updateMuteUI();
       if (gameOver) {
         showGameOverOverlay();
       }
+      if (playerHitsObstacle()) {
+  gameOver = true;
+
+  if (!easterShownThisRun && currentPlayer === "him" && score === 24) {
+    easterShownThisRun = true;
+    easterEggOverlay.style.display = "flex";
+  }
+}
     }
 
     function jump() {
